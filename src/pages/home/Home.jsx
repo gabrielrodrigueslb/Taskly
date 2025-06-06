@@ -35,31 +35,31 @@ export default function Home() {
   const Backgrounds = [
     {
       title: 'Background 1',
-      src: './backgrounds/wallpaper1.gif',
+      src: '/backgrounds/wallpaper1.gif',
     },
     {
       title: 'Background 2',
-      src: './backgrounds/wallpaper2.jpg',
+      src: '/backgrounds/wallpaper2.jpg',
     },
     {
       title: 'Background 3',
-      src: './backgrounds/wallpaper3.gif',
+      src: '/backgrounds/wallpaper3.gif',
     },
     {
       title: 'Background 4',
-      src: './backgrounds/wallpaper4.gif',
+      src: '/backgrounds/wallpaper4.gif',
     },
     {
       title: 'Background 5',
-      src: './backgrounds/wallpaper5.gif',
+      src: '/backgrounds/wallpaper5.gif',
     },
     {
       title: 'Background 6',
-      src: './backgrounds/wallpaper6.gif',
+      src: '/backgrounds/wallpaper6.gif',
     },
     {
       title: 'Background 7',
-      src: './backgrounds/wallpaper7.gif',
+      src: '/backgrounds/wallpaper7.gif',
     },
   ];
   const dataAtual = new Date();
@@ -92,7 +92,7 @@ export default function Home() {
         style={{
           backgroundImage: selectedBg
             ? `url(${selectedBg})`
-            : './backgrounds/wallpaper1.gif',
+            : '/backgrounds/wallpaper1.gif',
         }}
       >
         <section className="hour-section flex flex-col items-center justify-center h-screen text-center  font-extralight text-white pb-20 select-none">
