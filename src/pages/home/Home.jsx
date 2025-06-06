@@ -7,7 +7,7 @@ import { useState } from 'react';
 export default function Home() {
   const [openBackgrounds, setOpenBackgrounds] = useState(false);
   const [selectedBg, setSelectedBg] = useState(
-    'src/assets/backgrounds/wallpaper1.gif',
+    '/backgrounds/wallpaper1.gif',
   );
 
   function toggleBackgrounds() {
