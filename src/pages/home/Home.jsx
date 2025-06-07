@@ -61,6 +61,58 @@ export default function Home() {
       title: 'Background 7',
       src: '/backgrounds/wallpaper7.gif',
     },
+    {
+      title: '8Bit DarkCity',
+      src: '/backgrounds/8BitDarkCity.gif',
+    },
+    {
+      title: 'Cat',
+      src: '/backgrounds/cat.jpg',
+    },
+    {
+      title: 'PixelArtCozyGameRoom',
+      src: '/backgrounds/PixelArtCozyGameRoom.jpg',
+    },
+    {
+      title: 'Oriental',
+      src: '/backgrounds/oriental.gif',
+    },
+    {
+      title: 'Pokemon',
+      src: '/backgrounds/pokemon.gif',
+    },
+    {
+      title: 'PixelArt',
+      src: '/backgrounds/wallpaper8.gif',
+    },
+    {
+      title: 'PixelArt2',
+      src: '/backgrounds/wallpaper9.gif',
+    },
+    {
+      title: 'PixelArt3',
+      src: '/backgrounds/wallpaper10.jpeg',
+    },
+    {
+      title: 'PixelArt4',
+      src: '/backgrounds/wallpaper11.gif',
+    },
+    {
+      title: 'PixelArt5',
+      src: '/backgrounds/wallpaper12.gif',
+    },
+    {
+      title: 'PixelArt5',
+      src: '/backgrounds/StillOnbyKirokaze.gif',
+    },
+    {
+      title: 'PixelArt5',
+      src: '/backgrounds/MyNeighborTotoro.gif',
+    },
+    {
+      title: 'PixelArt5',
+      src: '/backgrounds/8Bit_Home_Games_Night.gif',
+    },
   ];
   const dataAtual = new Date();
 
@@ -118,7 +170,7 @@ export default function Home() {
                     src={bg.src}
                     alt={`Fundo ${index + 1}`}
                     onClick={() => setSelectedBg(bg.src)}
-                    className={`cursor-pointer rounded-lg w-full h-auto object-cover border-4 ${
+                    className={`cursor-pointer rounded-lg w-full h-full object-cover border-4 relative ${
                       selectedBg === bg.src
                         ? 'border-blue-600'
                         : 'border-transparent'
