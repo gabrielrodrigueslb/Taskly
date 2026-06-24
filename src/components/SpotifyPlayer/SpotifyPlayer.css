@@ -1,0 +1,139 @@
+.spotify-player {
+  position: fixed;
+  bottom: 90px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 40;
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Vinyl disc */
+.vinyl-disc {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  position: relative;
+  flex-shrink: 0;
+  animation: spin 4s linear infinite;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+}
+
+.vinyl-disc.paused {
+  animation-play-state: paused;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Vinyl SVG rings background */
+.vinyl-rings {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, #111 0%,   #111 18%,
+                                      #2a2a2a 19%, #2a2a2a 20%,
+                                      #1a1a1a 21%, #1a1a1a 32%,
+                                      #2a2a2a 33%, #2a2a2a 34%,
+                                      #1a1a1a 35%, #1a1a1a 46%,
+                                      #2a2a2a 47%, #2a2a2a 48%,
+                                      #1a1a1a 49%, #1a1a1a 60%,
+                                      #2a2a2a 61%, #2a2a2a 62%,
+                                      #1a1a1a 63%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Album art circle in center */
+.vinyl-art {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  overflow: hidden;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+}
+
+.vinyl-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vinyl-hole {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #111;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
+/* Track info */
+.track-info {
+  color: white;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
+  max-width: 160px;
+}
+
+.track-title {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+.track-artist {
+  font-size: 11px;
+  opacity: 0.75;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+/* Waveform bars (equalizer animation) */
+.waveform {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+  margin-top: 5px;
+}
+
+.waveform span {
+  display: block;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 1px;
+  animation: wave 0.8s ease-in-out infinite alternate;
+}
+
+.waveform span:nth-child(1) { animation-delay: 0s;    height: 4px; }
+.waveform span:nth-child(2) { animation-delay: 0.1s;  height: 8px; }
+.waveform span:nth-child(3) { animation-delay: 0.2s;  height: 12px; }
+.waveform span:nth-child(4) { animation-delay: 0.15s; height: 6px; }
+.waveform span:nth-child(5) { animation-delay: 0.05s; height: 10px; }
+
+@keyframes wave {
+  from { transform: scaleY(0.3); }
+  to   { transform: scaleY(1); }
+}
