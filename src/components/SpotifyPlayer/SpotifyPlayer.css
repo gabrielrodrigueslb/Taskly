@@ -1,143 +1,373 @@
-.spotify-player {
+/* ── Wrapper ─────────────────────────────────────────────────────────────── */
+
+.sp-wrapper {
   position: fixed;
   bottom: 90px;
   right: 24px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
   z-index: 40;
-  animation: fadeIn 0.4s ease;
+  animation: sp-fadein 0.4s ease;
 }
 
-@keyframes fadeIn {
+@keyframes sp-fadein {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Vinyl disc */
-.vinyl-disc {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  position: relative;
-  flex-shrink: 0;
-  animation: spin 4s linear infinite;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
-}
+/* ── Shared tokens ───────────────────────────────────────────────────────── */
 
-.vinyl-disc.paused {
-  animation-play-state: paused;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-
-/* Vinyl SVG rings background */
-.vinyl-rings {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at center, #111 0%,   #111 18%,
-                                      #2a2a2a 19%, #2a2a2a 20%,
-                                      #1a1a1a 21%, #1a1a1a 32%,
-                                      #2a2a2a 33%, #2a2a2a 34%,
-                                      #1a1a1a 35%, #1a1a1a 46%,
-                                      #2a2a2a 47%, #2a2a2a 48%,
-                                      #1a1a1a 49%, #1a1a1a 60%,
-                                      #2a2a2a 61%, #2a2a2a 62%,
-                                      #1a1a1a 63%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Album art circle in center */
-.vinyl-art {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  overflow: hidden;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  border: 1.5px solid rgba(255, 255, 255, 0.15);
-}
-
-.vinyl-art img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.vinyl-hole {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #111;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 1;
-}
-
-/* Track info */
-.track-info {
-  color: white;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
-  max-width: 160px;
-}
-
-.track-title {
+.sp-title {
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.3;
+  color: white;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
 }
 
-.track-artist {
+.sp-title-lg { font-size: 17px; white-space: normal; line-height: 1.3; }
+
+.sp-artist {
   font-size: 11px;
-  opacity: 0.75;
+  color: rgba(255,255,255,0.65);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-top: 2px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
 }
 
-/* Playback controls */
-.controls {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 6px;
-}
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
 
-.ctrl-btn {
-  background: rgba(255, 255, 255, 0.15);
+.sp-btn {
+  background: rgba(255,255,255,0.15);
   border: none;
   border-radius: 50%;
-  width: 26px;
-  height: 26px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
   color: white;
   cursor: pointer;
   transition: background 0.15s;
+  flex-shrink: 0;
 }
 
-.ctrl-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+.sp-btn:hover { background: rgba(255,255,255,0.28); }
+
+.sp-btn-play {
+  width: 38px; height: 38px;
+  background: rgba(255,255,255,0.25);
 }
 
-.ctrl-play {
-  width: 32px;
-  height: 32px;
-  background: rgba(255, 255, 255, 0.25);
+.sp-btn-green { background: #1db954 !important; }
+.sp-btn-green:hover { background: #1ed760 !important; }
+
+.sp-icon-btn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex; align-items: center;
+  transition: color 0.15s;
+}
+
+.sp-icon-btn:hover { color: white; }
+
+.sp-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Progress bar ────────────────────────────────────────────────────────── */
+
+.sp-progress-track {
+  width: 100%;
+  height: 3px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+  cursor: pointer;
+  position: relative;
+}
+
+.sp-progress-fill {
+  height: 100%;
+  background: white;
+  border-radius: 2px;
+  pointer-events: none;
+  transition: width 0.3s linear;
+}
+
+.sp-time-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: rgba(255,255,255,0.55);
+  margin-top: 2px;
+}
+
+.sp-action-btns {
+  display: flex;
+  gap: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STYLE: VINYL
+═══════════════════════════════════════════════════════════════════════════ */
+
+.sp-vinyl {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Disc */
+.sp-vinyl-disc {
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: sp-spin 4s linear infinite;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+}
+
+.sp-vinyl-disc.paused { animation-play-state: paused; }
+
+@keyframes sp-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.sp-vinyl-rings {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle at center,
+    #111 0%, #111 18%,
+    #2a2a2a 19%, #2a2a2a 20%,
+    #1a1a1a 21%, #1a1a1a 32%,
+    #2a2a2a 33%, #2a2a2a 34%,
+    #1a1a1a 35%, #1a1a1a 46%,
+    #2a2a2a 47%, #2a2a2a 48%,
+    #1a1a1a 49%, #1a1a1a 60%,
+    #2a2a2a 61%, #2a2a2a 62%,
+    #1a1a1a 63%
+  );
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+
+.sp-vinyl-art {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  border: 1.5px solid rgba(255,255,255,0.1);
+}
+
+.sp-vinyl-art img { width: 100%; height: 100%; object-fit: cover; }
+
+.sp-vinyl-hole {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #111;
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
+.sp-vinyl-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 170px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STYLE: CARD
+═══════════════════════════════════════════════════════════════════════════ */
+
+.sp-card {
+  width: 300px;
+  background: rgba(15, 15, 20, 0.82);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+}
+
+.sp-card-top-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.sp-card-body {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.sp-card-art {
+  width: 90px; height: 90px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+
+.sp-card-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sp-controls-card { margin-top: 4px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STYLE: COMPACT
+═══════════════════════════════════════════════════════════════════════════ */
+
+.sp-compact {
+  display: flex;
+  align-items: stretch;
+  background: rgba(10, 10, 12, 0.88);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  overflow: hidden;
+  width: 320px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+.sp-compact-art {
+  width: 80px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.sp-compact-body {
+  flex: 1;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sp-compact-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.sp-compact-text { flex: 1; min-width: 0; }
+
+.sp-compact-actions { display: flex; gap: 2px; flex-shrink: 0; }
+
+.sp-controls-compact { gap: 6px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   QUEUE PANEL
+═══════════════════════════════════════════════════════════════════════════ */
+
+.sp-queue-panel {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  right: 0;
+  width: 280px;
+  max-height: 360px;
+  background: rgba(15, 15, 20, 0.92);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  animation: sp-fadein 0.2s ease;
+}
+
+.sp-queue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  flex-shrink: 0;
+}
+
+.sp-queue-header button {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.sp-queue-list {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.sp-queue-list::-webkit-scrollbar { width: 4px; }
+.sp-queue-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+.sp-queue-empty {
+  text-align: center;
+  color: rgba(255,255,255,0.4);
+  font-size: 13px;
+  padding: 24px;
+}
+
+.sp-queue-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.sp-queue-item:hover { background: rgba(255,255,255,0.07); }
+
+.sp-queue-item img {
+  width: 38px; height: 38px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.sp-queue-item-info { flex: 1; min-width: 0; }
+
+.sp-queue-item-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sp-queue-item-artist {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

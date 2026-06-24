@@ -2,13 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 
 const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
 const REDIRECT_URI = window.location.origin + '/callback';
-const SCOPES = 'user-read-currently-playing user-read-playback-state user-modify-playback-state';
+const SCOPES = [
+  'user-read-currently-playing',
+  'user-read-playback-state',
+  'user-modify-playback-state',
+].join(' ');
 
 async function generateCodeVerifier() {
   const array = new Uint8Array(32);
   crypto.getRandomValues(array);
-  // base64url: troca +→- /→_ e remove padding =
-  // 32 bytes → exatamente 43 chars válidos pro PKCE
   return btoa(String.fromCharCode(...array))
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
@@ -24,9 +26,14 @@ async function generateCodeChallenge(verifier) {
     .replace(/=/g, '');
 }
 
+function getToken() {
+  return localStorage.getItem('spotify_token');
+}
+
 export function useSpotify() {
-  const [token, setToken] = useState(() => localStorage.getItem('spotify_token'));
+  const [token, setToken] = useState(() => getToken());
   const [currentTrack, setCurrentTrack] = useState(null);
+  const [queue, setQueue] = useState([]);
 
   const login = useCallback(async () => {
     const verifier = await generateCodeVerifier();
@@ -41,7 +48,6 @@ export function useSpotify() {
       code_challenge_method: 'S256',
       code_challenge: challenge,
     });
-
     window.location.href = `https://accounts.spotify.com/authorize?${params}`;
   }, []);
 
@@ -96,7 +102,6 @@ export function useSpotify() {
         refresh_token: refresh,
       }),
     });
-
     const data = await res.json();
     if (data.access_token) {
       localStorage.setItem('spotify_token', data.access_token);
@@ -107,37 +112,29 @@ export function useSpotify() {
     return null;
   }, []);
 
-  // Poll current track every 5s
+  const getActiveToken = useCallback(async () => {
+    const expires = localStorage.getItem('spotify_expires');
+    if (expires && Date.now() > Number(expires) - 60000) {
+      return await refreshToken();
+    }
+    return getToken();
+  }, [refreshToken]);
+
+  // Poll currently playing every 5s
   useEffect(() => {
     if (!token) return;
 
     const fetchCurrentTrack = async () => {
-      const expires = localStorage.getItem('spotify_expires');
-      let activeToken = token;
-
-      if (expires && Date.now() > Number(expires) - 60000) {
-        activeToken = await refreshToken();
-        if (!activeToken) {
-          setToken(null);
-          return;
-        }
-      }
+      const activeToken = await getActiveToken();
+      if (!activeToken) { setToken(null); return; }
 
       try {
         const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
           headers: { Authorization: `Bearer ${activeToken}` },
         });
 
-        if (res.status === 401) {
-          setToken(null);
-          setCurrentTrack(null);
-          return;
-        }
-
-        if (res.status === 204) {
-          setCurrentTrack(null);
-          return;
-        }
+        if (res.status === 401) { setToken(null); setCurrentTrack(null); return; }
+        if (res.status === 204) { setCurrentTrack(null); return; }
 
         const data = await res.json();
         if (data.item) {
@@ -146,38 +143,75 @@ export function useSpotify() {
             artist: data.item.artists.map((a) => a.name).join(', '),
             albumArt: data.item.album.images[0]?.url,
             isPlaying: data.is_playing,
+            progressMs: data.progress_ms,
+            durationMs: data.item.duration_ms,
+            uri: data.item.uri,
           });
         } else {
           setCurrentTrack(null);
         }
-      } catch {
-        // ignore network errors silently
-      }
+      } catch { /* ignore */ }
     };
 
     fetchCurrentTrack();
-    const interval = setInterval(fetchCurrentTrack, 5000);
+    const interval = setInterval(fetchCurrentTrack, 2000);
     return () => clearInterval(interval);
-  }, [token, refreshToken]);
+  }, [token, getActiveToken]);
 
-  const playerAction = useCallback(async (endpoint, method = 'POST') => {
-    const activeToken = localStorage.getItem('spotify_token');
+  // Poll queue every 10s
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchQueue = async () => {
+      const activeToken = await getActiveToken();
+      if (!activeToken) return;
+
+      try {
+        const res = await fetch('https://api.spotify.com/v1/me/player/queue', {
+          headers: { Authorization: `Bearer ${activeToken}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        setQueue(data.queue?.slice(0, 20) || []);
+      } catch { /* ignore */ }
+    };
+
+    fetchQueue();
+    const interval = setInterval(fetchQueue, 10000);
+    return () => clearInterval(interval);
+  }, [token, getActiveToken]);
+
+  // Playback controls
+  const playerAction = useCallback(async (endpoint, method = 'POST', body = null) => {
+    const activeToken = await getActiveToken();
     if (!activeToken) return;
     await fetch(`https://api.spotify.com/v1/me/player/${endpoint}`, {
       method,
-      headers: { Authorization: `Bearer ${activeToken}` },
+      headers: {
+        Authorization: `Bearer ${activeToken}`,
+        ...(body ? { 'Content-Type': 'application/json' } : {}),
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
     });
-  }, []);
+  }, [getActiveToken]);
 
   const togglePlay = useCallback(() => {
     const action = currentTrack?.isPlaying ? 'pause' : 'play';
     playerAction(action, 'PUT');
-    // Atualiza estado local imediatamente para UI responsiva
     setCurrentTrack((prev) => prev ? { ...prev, isPlaying: !prev.isPlaying } : prev);
   }, [currentTrack, playerAction]);
 
   const nextTrack = useCallback(() => playerAction('next'), [playerAction]);
   const prevTrack = useCallback(() => playerAction('previous'), [playerAction]);
+
+  const seekTo = useCallback((positionMs) => {
+    playerAction(`seek?position_ms=${Math.floor(positionMs)}`, 'PUT');
+    setCurrentTrack((prev) => prev ? { ...prev, progressMs: positionMs } : prev);
+  }, [playerAction]);
+
+  const skipToTrack = useCallback((uri) => {
+    playerAction('play', 'PUT', { uris: [uri] });
+  }, [playerAction]);
 
   const logout = useCallback(() => {
     localStorage.removeItem('spotify_token');
@@ -185,6 +219,7 @@ export function useSpotify() {
     localStorage.removeItem('spotify_expires');
     setToken(null);
     setCurrentTrack(null);
+    setQueue([]);
   }, []);
 
   return {
@@ -192,8 +227,11 @@ export function useSpotify() {
     login,
     logout,
     currentTrack,
+    queue,
     togglePlay,
     nextTrack,
     prevTrack,
+    seekTo,
+    skipToTrack,
   };
 }
