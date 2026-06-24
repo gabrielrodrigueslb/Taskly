@@ -7,9 +7,12 @@ const SCOPES = 'user-read-currently-playing user-read-playback-state';
 async function generateCodeVerifier() {
   const array = new Uint8Array(32);
   crypto.getRandomValues(array);
+  // base64url: troca +→- /→_ e remove padding =
+  // 32 bytes → exatamente 43 chars válidos pro PKCE
   return btoa(String.fromCharCode(...array))
-    .replace(/[^a-zA-Z0-9]/g, '')
-    .slice(0, 43);
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
 }
 
 async function generateCodeChallenge(verifier) {
@@ -54,6 +57,8 @@ export function useSpotify() {
     localStorage.removeItem('spotify_verifier');
     window.history.replaceState({}, '', '/');
 
+    console.log('[Spotify] Trocando code por token...', { CLIENT_ID, REDIRECT_URI });
+
     fetch('https://accounts.spotify.com/api/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -67,13 +72,15 @@ export function useSpotify() {
     })
       .then((r) => r.json())
       .then((data) => {
+        console.log('[Spotify] Resposta token:', data);
         if (data.access_token) {
           localStorage.setItem('spotify_token', data.access_token);
           localStorage.setItem('spotify_refresh', data.refresh_token);
           localStorage.setItem('spotify_expires', Date.now() + data.expires_in * 1000);
           setToken(data.access_token);
         }
-      });
+      })
+      .catch((err) => console.error('[Spotify] Erro no token exchange:', err));
   }, []);
 
   const refreshToken = useCallback(async () => {
