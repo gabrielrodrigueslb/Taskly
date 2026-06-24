@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
 const REDIRECT_URI = window.location.origin + '/callback';
@@ -34,12 +34,12 @@ export function useSpotify() {
   const [token, setToken] = useState(() => getToken());
   const [currentTrack, setCurrentTrack] = useState(null);
   const [queue, setQueue] = useState([]);
+  const artistImageCache = useRef({});
 
   const login = useCallback(async () => {
     const verifier = await generateCodeVerifier();
     const challenge = await generateCodeChallenge(verifier);
     localStorage.setItem('spotify_verifier', verifier);
-
     const params = new URLSearchParams({
       client_id: CLIENT_ID,
       response_type: 'code',
@@ -56,14 +56,10 @@ export function useSpotify() {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
     if (!code) return;
-
     const verifier = localStorage.getItem('spotify_verifier');
     if (!verifier) return;
-
     localStorage.removeItem('spotify_verifier');
     window.history.replaceState({}, '', '/');
-
-    console.log('[Spotify] Trocando code por token...', { CLIENT_ID, REDIRECT_URI });
 
     fetch('https://accounts.spotify.com/api/token', {
       method: 'POST',
@@ -78,7 +74,6 @@ export function useSpotify() {
     })
       .then((r) => r.json())
       .then((data) => {
-        console.log('[Spotify] Resposta token:', data);
         if (data.access_token) {
           localStorage.setItem('spotify_token', data.access_token);
           localStorage.setItem('spotify_refresh', data.refresh_token);
@@ -86,13 +81,12 @@ export function useSpotify() {
           setToken(data.access_token);
         }
       })
-      .catch((err) => console.error('[Spotify] Erro no token exchange:', err));
+      .catch(console.error);
   }, []);
 
   const refreshToken = useCallback(async () => {
     const refresh = localStorage.getItem('spotify_refresh');
     if (!refresh) return null;
-
     const res = await fetch('https://accounts.spotify.com/api/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -114,13 +108,28 @@ export function useSpotify() {
 
   const getActiveToken = useCallback(async () => {
     const expires = localStorage.getItem('spotify_expires');
-    if (expires && Date.now() > Number(expires) - 60000) {
-      return await refreshToken();
-    }
+    if (expires && Date.now() > Number(expires) - 60000) return await refreshToken();
     return getToken();
   }, [refreshToken]);
 
-  // Poll currently playing every 5s
+  // Fetch artist image (cached)
+  const fetchArtistImage = useCallback(async (artistId, activeToken) => {
+    if (!artistId) return null;
+    if (artistImageCache.current[artistId]) return artistImageCache.current[artistId];
+    try {
+      const res = await fetch(`https://api.spotify.com/v1/artists/${artistId}`, {
+        headers: { Authorization: `Bearer ${activeToken}` },
+      });
+      const data = await res.json();
+      const url = data.images?.[0]?.url || null;
+      artistImageCache.current[artistId] = url;
+      return url;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  // Poll currently playing every 2s
   useEffect(() => {
     if (!token) return;
 
@@ -132,40 +141,40 @@ export function useSpotify() {
         const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
           headers: { Authorization: `Bearer ${activeToken}` },
         });
-
         if (res.status === 401) { setToken(null); setCurrentTrack(null); return; }
         if (res.status === 204) { setCurrentTrack(null); return; }
 
         const data = await res.json();
-        if (data.item) {
-          setCurrentTrack({
-            title: data.item.name,
-            artist: data.item.artists.map((a) => a.name).join(', '),
-            albumArt: data.item.album.images[0]?.url,
-            isPlaying: data.is_playing,
-            progressMs: data.progress_ms,
-            durationMs: data.item.duration_ms,
-            uri: data.item.uri,
-          });
-        } else {
-          setCurrentTrack(null);
-        }
+        if (!data.item) { setCurrentTrack(null); return; }
+
+        const artistId = data.item.artists[0]?.id || null;
+        const artistImageUrl = await fetchArtistImage(artistId, activeToken);
+
+        setCurrentTrack({
+          title: data.item.name,
+          artist: data.item.artists.map((a) => a.name).join(', '),
+          albumArt: data.item.album.images[0]?.url,
+          artistImageUrl,
+          artistId,
+          isPlaying: data.is_playing,
+          progressMs: data.progress_ms,
+          durationMs: data.item.duration_ms,
+          uri: data.item.uri,
+        });
       } catch { /* ignore */ }
     };
 
     fetchCurrentTrack();
     const interval = setInterval(fetchCurrentTrack, 2000);
     return () => clearInterval(interval);
-  }, [token, getActiveToken]);
+  }, [token, getActiveToken, fetchArtistImage]);
 
   // Poll queue every 10s
   useEffect(() => {
     if (!token) return;
-
     const fetchQueue = async () => {
       const activeToken = await getActiveToken();
       if (!activeToken) return;
-
       try {
         const res = await fetch('https://api.spotify.com/v1/me/player/queue', {
           headers: { Authorization: `Bearer ${activeToken}` },
@@ -175,13 +184,12 @@ export function useSpotify() {
         setQueue(data.queue?.slice(0, 20) || []);
       } catch { /* ignore */ }
     };
-
     fetchQueue();
     const interval = setInterval(fetchQueue, 10000);
     return () => clearInterval(interval);
   }, [token, getActiveToken]);
 
-  // Playback controls
+  // Generic player action
   const playerAction = useCallback(async (endpoint, method = 'POST', body = null) => {
     const activeToken = await getActiveToken();
     if (!activeToken) return;
@@ -195,23 +203,19 @@ export function useSpotify() {
     });
   }, [getActiveToken]);
 
-  const togglePlay = useCallback(() => {
+  const togglePlay   = useCallback(() => {
     const action = currentTrack?.isPlaying ? 'pause' : 'play';
     playerAction(action, 'PUT');
-    setCurrentTrack((prev) => prev ? { ...prev, isPlaying: !prev.isPlaying } : prev);
+    setCurrentTrack((p) => p ? { ...p, isPlaying: !p.isPlaying } : p);
   }, [currentTrack, playerAction]);
 
-  const nextTrack = useCallback(() => playerAction('next'), [playerAction]);
-  const prevTrack = useCallback(() => playerAction('previous'), [playerAction]);
-
-  const seekTo = useCallback((positionMs) => {
-    playerAction(`seek?position_ms=${Math.floor(positionMs)}`, 'PUT');
-    setCurrentTrack((prev) => prev ? { ...prev, progressMs: positionMs } : prev);
+  const nextTrack    = useCallback(() => playerAction('next'), [playerAction]);
+  const prevTrack    = useCallback(() => playerAction('previous'), [playerAction]);
+  const seekTo       = useCallback((ms) => {
+    playerAction(`seek?position_ms=${Math.floor(ms)}`, 'PUT');
+    setCurrentTrack((p) => p ? { ...p, progressMs: ms } : p);
   }, [playerAction]);
-
-  const skipToTrack = useCallback((uri) => {
-    playerAction('play', 'PUT', { uris: [uri] });
-  }, [playerAction]);
+  const skipToTrack  = useCallback((uri) => playerAction('play', 'PUT', { uris: [uri] }), [playerAction]);
 
   const logout = useCallback(() => {
     localStorage.removeItem('spotify_token');
@@ -224,14 +228,8 @@ export function useSpotify() {
 
   return {
     isConnected: !!token,
-    login,
-    logout,
-    currentTrack,
-    queue,
-    togglePlay,
-    nextTrack,
-    prevTrack,
-    seekTo,
-    skipToTrack,
+    login, logout,
+    currentTrack, queue,
+    togglePlay, nextTrack, prevTrack, seekTo, skipToTrack,
   };
 }

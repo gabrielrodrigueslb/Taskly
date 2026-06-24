@@ -1,36 +1,62 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import './SpotifyPlayer.css';
 
-const STYLES = ['vinyl', 'card', 'compact'];
-
-// ── Icons ────────────────────────────────────────────────────────────────────
+// ── Icons ─────────────────────────────────────────────────────────────────────
 
 const IconPrev  = () => <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>;
 const IconNext  = () => <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M6 18l8.5-6L6 6v12zm2.5-6 5.5 3.9V8.1L8.5 12zM16 6h2v12h-2z"/></svg>;
 const IconPause = () => <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>;
 const IconPlay  = () => <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M8 5v14l11-7z"/></svg>;
 const IconQueue = () => <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>;
-const IconPaint = () => <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M7 14c-1.66 0-3 1.34-3 3 0 1.31-1.16 2-2 2 .92 1.22 2.49 2 4 2 2.21 0 4-1.79 4-4 0-1.66-1.34-3-3-3zm13.71-9.37-1.34-1.34a1 1 0 0 0-1.41 0L9 12.25 11.75 15l8.96-8.96a1 1 0 0 0 0-1.41z"/></svg>;
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function formatTime(ms) {
   const s = Math.floor((ms || 0) / 1000);
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
 
-function ProgressBar({ progressMs, durationMs, onSeek }) {
-  const pct = durationMs ? (progressMs / durationMs) * 100 : 0;
+// ── Draggable Progress Bar ────────────────────────────────────────────────────
 
-  const handleClick = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const ratio = (e.clientX - rect.left) / rect.width;
-    onSeek(ratio * durationMs);
-  };
+function ProgressBar({ progressMs, durationMs, onSeek }) {
+  const trackRef = useRef(null);
+  const [dragging, setDragging] = useState(false);
+  const [dragPct, setDragPct] = useState(null);
+
+  const getPct = useCallback((clientX) => {
+    const rect = trackRef.current?.getBoundingClientRect();
+    if (!rect) return 0;
+    return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+  }, []);
+
+  useEffect(() => {
+    if (!dragging) return;
+    const onMove = (e) => setDragPct(getPct(e.clientX));
+    const onUp   = (e) => {
+      onSeek(getPct(e.clientX) * durationMs);
+      setDragging(false);
+      setDragPct(null);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [dragging, durationMs, onSeek, getPct]);
+
+  const displayPct = dragging && dragPct !== null
+    ? dragPct * 100
+    : durationMs ? (progressMs / durationMs) * 100 : 0;
 
   return (
-    <div className="sp-progress-track" onClick={handleClick}>
-      <div className="sp-progress-fill" style={{ width: `${pct}%` }} />
+    <div
+      ref={trackRef}
+      className="sp-progress-track"
+      onMouseDown={(e) => { setDragging(true); setDragPct(getPct(e.clientX)); }}
+    >
+      <div className="sp-progress-fill" style={{ width: `${displayPct}%`, transition: dragging ? 'none' : 'width 0.3s linear' }} />
+      <div className="sp-progress-thumb" style={{ left: `${displayPct}%` }} />
     </div>
   );
 }
@@ -51,7 +77,7 @@ function QueuePanel({ queue, onSkipToTrack, onClose }) {
             <img src={track.album.images[2]?.url || track.album.images[0]?.url} alt="" />
             <div className="sp-queue-item-info">
               <p className="sp-queue-item-title">{track.name}</p>
-              <p className="sp-queue-item-artist">{track.artists.map(a => a.name).join(', ')}</p>
+              <p className="sp-queue-item-artist">{track.artists.map((a) => a.name).join(', ')}</p>
             </div>
           </button>
         ))}
@@ -60,9 +86,58 @@ function QueuePanel({ queue, onSkipToTrack, onClose }) {
   );
 }
 
+// ── Controls shared ───────────────────────────────────────────────────────────
+
+function Controls({ track, onTogglePlay, onNext, onPrev, compact = false }) {
+  return (
+    <div className="sp-controls">
+      <button className="sp-btn" onClick={onPrev}><IconPrev /></button>
+      <button className={`sp-btn sp-btn-play ${compact ? 'sp-btn-green' : ''}`} onClick={onTogglePlay}>
+        {track.isPlaying ? <IconPause /> : <IconPlay />}
+      </button>
+      <button className="sp-btn" onClick={onNext}><IconNext /></button>
+    </div>
+  );
+}
+
+// ── Style: Cover ──────────────────────────────────────────────────────────────
+
+function CoverStyle({ track, progressMs, onTogglePlay, onNext, onPrev, onSeek, onToggleQueue }) {
+  return (
+    <div className="sp-cover">
+      <div className="sp-cover-wave">
+        {Array.from({ length: 18 }).map((_, i) => (
+          <span key={i} style={{ animationDelay: `${(i * 0.07).toFixed(2)}s` }} />
+        ))}
+      </div>
+      <div className="sp-cover-stack">
+        <div className={`sp-cover-disc ${!track.isPlaying ? 'paused' : ''}`}>
+          <div className="sp-cover-disc-rings">
+            <div className="sp-vinyl-hole" />
+          </div>
+        </div>
+        {track.albumArt && <img className="sp-cover-art" src={track.albumArt} alt={track.title} />}
+      </div>
+      <div className="sp-cover-info">
+        <p className="sp-title">{track.title}</p>
+        <p className="sp-artist">{track.artist}</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
+          <Controls track={track} onTogglePlay={onTogglePlay} onNext={onNext} onPrev={onPrev} />
+          <button className="sp-icon-btn" onClick={onToggleQueue}><IconQueue /></button>
+        </div>
+        <ProgressBar progressMs={progressMs} durationMs={track.durationMs} onSeek={onSeek} />
+        <div className="sp-time-row">
+          <span>{formatTime(progressMs)}</span>
+          <span>{formatTime(track.durationMs)}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Style: Vinyl ──────────────────────────────────────────────────────────────
 
-function VinylStyle({ track, progressMs, onTogglePlay, onNext, onPrev, onSeek, onCycleStyle, onToggleQueue }) {
+function VinylStyle({ track, progressMs, onTogglePlay, onNext, onPrev, onSeek, onToggleQueue }) {
   return (
     <div className="sp-vinyl">
       <div className={`sp-vinyl-disc ${!track.isPlaying ? 'paused' : ''}`}>
@@ -74,20 +149,13 @@ function VinylStyle({ track, progressMs, onTogglePlay, onNext, onPrev, onSeek, o
       <div className="sp-vinyl-info">
         <p className="sp-title">{track.title}</p>
         <p className="sp-artist">{track.artist}</p>
-        <div className="sp-controls">
-          <button className="sp-btn" onClick={onPrev}><IconPrev /></button>
-          <button className="sp-btn sp-btn-play" onClick={onTogglePlay}>
-            {track.isPlaying ? <IconPause /> : <IconPlay />}
-          </button>
-          <button className="sp-btn" onClick={onNext}><IconNext /></button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+          <Controls track={track} onTogglePlay={onTogglePlay} onNext={onNext} onPrev={onPrev} />
+          <button className="sp-icon-btn" onClick={onToggleQueue}><IconQueue /></button>
         </div>
         <ProgressBar progressMs={progressMs} durationMs={track.durationMs} onSeek={onSeek} />
         <div className="sp-time-row">
           <span>{formatTime(progressMs)}</span>
-          <div className="sp-action-btns">
-            <button className="sp-icon-btn" onClick={onToggleQueue}><IconQueue /></button>
-            <button className="sp-icon-btn" onClick={onCycleStyle}><IconPaint /></button>
-          </div>
           <span>{formatTime(track.durationMs)}</span>
         </div>
       </div>
@@ -97,25 +165,19 @@ function VinylStyle({ track, progressMs, onTogglePlay, onNext, onPrev, onSeek, o
 
 // ── Style: Card ───────────────────────────────────────────────────────────────
 
-function CardStyle({ track, progressMs, onTogglePlay, onNext, onPrev, onSeek, onCycleStyle, onToggleQueue }) {
+function CardStyle({ track, progressMs, onTogglePlay, onNext, onPrev, onSeek, onToggleQueue }) {
   return (
     <div className="sp-card">
       <div className="sp-card-top-row">
+        <span />
         <button className="sp-icon-btn" onClick={onToggleQueue}><IconQueue /></button>
-        <button className="sp-icon-btn" onClick={onCycleStyle}><IconPaint /></button>
       </div>
       <div className="sp-card-body">
         {track.albumArt && <img className="sp-card-art" src={track.albumArt} alt="" />}
         <div className="sp-card-info">
           <p className="sp-artist">{track.artist}</p>
           <p className="sp-title sp-title-lg">{track.title}</p>
-          <div className="sp-controls sp-controls-card">
-            <button className="sp-btn" onClick={onPrev}><IconPrev /></button>
-            <button className="sp-btn sp-btn-play" onClick={onTogglePlay}>
-              {track.isPlaying ? <IconPause /> : <IconPlay />}
-            </button>
-            <button className="sp-btn" onClick={onNext}><IconNext /></button>
-          </div>
+          <Controls track={track} onTogglePlay={onTogglePlay} onNext={onNext} onPrev={onPrev} />
         </div>
       </div>
       <ProgressBar progressMs={progressMs} durationMs={track.durationMs} onSeek={onSeek} />
@@ -127,9 +189,47 @@ function CardStyle({ track, progressMs, onTogglePlay, onNext, onPrev, onSeek, on
   );
 }
 
+// ── Style: iOS ────────────────────────────────────────────────────────────────
+
+function IosStyle({ track, progressMs, onTogglePlay, onNext, onPrev, onSeek, onToggleQueue }) {
+  return (
+    <div className="sp-ios">
+      {/* Album art */}
+      {track.albumArt && (
+        <img className="sp-ios-art" src={track.albumArt} alt={track.title} />
+      )}
+
+      {/* Controls panel */}
+      <div className="sp-ios-panel">
+        <div className="sp-ios-info">
+          <div className="sp-ios-text">
+            <p className="sp-ios-title">{track.title}</p>
+            <p className="sp-ios-artist">{track.artist}</p>
+          </div>
+          <button className="sp-icon-btn" onClick={onToggleQueue}><IconQueue /></button>
+        </div>
+
+        <ProgressBar progressMs={progressMs} durationMs={track.durationMs} onSeek={onSeek} />
+        <div className="sp-time-row" style={{ marginTop: 4 }}>
+          <span>{formatTime(progressMs)}</span>
+          <span>-{formatTime((track.durationMs || 0) - progressMs)}</span>
+        </div>
+
+        <div className="sp-ios-controls">
+          <button className="sp-ios-btn" onClick={onPrev}><IconPrev /></button>
+          <button className="sp-ios-btn sp-ios-play" onClick={onTogglePlay}>
+            {track.isPlaying ? <IconPause /> : <IconPlay />}
+          </button>
+          <button className="sp-ios-btn" onClick={onNext}><IconNext /></button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Style: Compact ────────────────────────────────────────────────────────────
 
-function CompactStyle({ track, progressMs, onTogglePlay, onNext, onPrev, onSeek, onCycleStyle, onToggleQueue }) {
+function CompactStyle({ track, progressMs, onTogglePlay, onNext, onPrev, onSeek, onToggleQueue }) {
   return (
     <div className="sp-compact">
       {track.albumArt && <img className="sp-compact-art" src={track.albumArt} alt="" />}
@@ -139,18 +239,9 @@ function CompactStyle({ track, progressMs, onTogglePlay, onNext, onPrev, onSeek,
             <p className="sp-title">{track.title}</p>
             <p className="sp-artist">{track.artist}</p>
           </div>
-          <div className="sp-compact-actions">
-            <button className="sp-icon-btn" onClick={onToggleQueue}><IconQueue /></button>
-            <button className="sp-icon-btn" onClick={onCycleStyle}><IconPaint /></button>
-          </div>
+          <button className="sp-icon-btn" onClick={onToggleQueue}><IconQueue /></button>
         </div>
-        <div className="sp-controls sp-controls-compact">
-          <button className="sp-btn" onClick={onPrev}><IconPrev /></button>
-          <button className="sp-btn sp-btn-play sp-btn-green" onClick={onTogglePlay}>
-            {track.isPlaying ? <IconPause /> : <IconPlay />}
-          </button>
-          <button className="sp-btn" onClick={onNext}><IconNext /></button>
-        </div>
+        <Controls track={track} onTogglePlay={onTogglePlay} onNext={onNext} onPrev={onPrev} compact />
         <ProgressBar progressMs={progressMs} durationMs={track.durationMs} onSeek={onSeek} />
         <div className="sp-time-row">
           <span>{formatTime(progressMs)}</span>
@@ -161,19 +252,57 @@ function CompactStyle({ track, progressMs, onTogglePlay, onNext, onPrev, onSeek,
   );
 }
 
-// ── Main Component ────────────────────────────────────────────────────────────
+// ── Draggable Wrapper ─────────────────────────────────────────────────────────
 
-export default function SpotifyPlayer({ track, queue, onTogglePlay, onNext, onPrev, onSeek, onSkipToTrack }) {
-  const [style, setStyle] = useState(() => localStorage.getItem('sp_style') || 'vinyl');
+function useDrag(key) {
+  const saved = (() => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } })();
+  const [pos, setPos] = useState(saved || { x: window.innerWidth - 320, y: window.innerHeight - 200 });
+  const dragging = useRef(false);
+  const origin   = useRef({ mx: 0, my: 0, px: 0, py: 0 });
+  const wrapRef  = useRef(null);
+
+  const onMouseDown = useCallback((e) => {
+    // Ignore clicks on interactive elements
+    if (e.target.closest('button, input, .sp-progress-track, .sp-queue-panel')) return;
+    dragging.current = true;
+    origin.current = { mx: e.clientX, my: e.clientY, px: pos.x, py: pos.y };
+    e.preventDefault();
+  }, [pos]);
+
+  useEffect(() => {
+    const onMove = (e) => {
+      if (!dragging.current) return;
+      const nx = origin.current.px + (e.clientX - origin.current.mx);
+      const ny = origin.current.py + (e.clientY - origin.current.my);
+      setPos({ x: nx, y: ny });
+    };
+    const onUp = () => {
+      if (!dragging.current) return;
+      dragging.current = false;
+      setPos((p) => {
+        localStorage.setItem(key, JSON.stringify(p));
+        return p;
+      });
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+  }, [key]);
+
+  return { pos, wrapRef, onMouseDown };
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+
+export default function SpotifyPlayer({ track, queue, style, onTogglePlay, onNext, onPrev, onSeek, onSkipToTrack }) {
   const [showQueue, setShowQueue] = useState(false);
   const [progressMs, setProgressMs] = useState(0);
+  const { pos, wrapRef, onMouseDown } = useDrag('sp_pos');
 
-  // Sync progress from polling
   useEffect(() => {
     if (track?.progressMs != null) setProgressMs(track.progressMs);
   }, [track?.progressMs]);
 
-  // Tick progress locally between polls
   useEffect(() => {
     if (!track?.isPlaying) return;
     const interval = setInterval(() => {
@@ -184,21 +313,18 @@ export default function SpotifyPlayer({ track, queue, onTogglePlay, onNext, onPr
 
   if (!track) return null;
 
-  const cycleStyle = () => {
-    const next = STYLES[(STYLES.indexOf(style) + 1) % STYLES.length];
-    setStyle(next);
-    localStorage.setItem('sp_style', next);
-  };
-
   const toggleQueue = () => setShowQueue((v) => !v);
-
-  const styleProps = {
-    track, progressMs, onTogglePlay, onNext, onPrev,
-    onSeek, onCycleStyle: cycleStyle, onToggleQueue: toggleQueue,
-  };
+  const styleProps = { track, progressMs, onTogglePlay, onNext, onPrev, onSeek, onToggleQueue: toggleQueue };
 
   return (
-    <div className="sp-wrapper">
+    <div
+      ref={wrapRef}
+      className="sp-wrapper"
+      style={{ left: pos.x, top: pos.y, bottom: 'unset', right: 'unset' }}
+      onMouseDown={onMouseDown}
+    >
+      {style === 'ios'     && <IosStyle     {...styleProps} />}
+      {style === 'cover'   && <CoverStyle   {...styleProps} />}
       {style === 'vinyl'   && <VinylStyle   {...styleProps} />}
       {style === 'card'    && <CardStyle    {...styleProps} />}
       {style === 'compact' && <CompactStyle {...styleProps} />}

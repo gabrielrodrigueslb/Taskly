@@ -2,11 +2,18 @@
 
 .sp-wrapper {
   position: fixed;
-  bottom: 90px;
-  right: 24px;
   z-index: 40;
   animation: sp-fadein 0.4s ease;
+  cursor: grab;
+  user-select: none;
 }
+
+.sp-wrapper:active { cursor: grabbing; }
+
+/* Restore pointer for interactive children */
+.sp-wrapper button,
+.sp-wrapper input,
+.sp-wrapper .sp-progress-track { cursor: pointer; }
 
 @keyframes sp-fadein {
   from { opacity: 0; transform: translateY(10px); }
@@ -95,8 +102,22 @@
   background: white;
   border-radius: 2px;
   pointer-events: none;
-  transition: width 0.3s linear;
 }
+
+.sp-progress-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  background: white;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.sp-progress-track:hover .sp-progress-thumb { opacity: 1; }
 
 .sp-time-row {
   display: flex;
@@ -110,6 +131,103 @@
 .sp-action-btns {
   display: flex;
   gap: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STYLE: COVER (capa na frente, disco atrás)
+═══════════════════════════════════════════════════════════════════════════ */
+
+.sp-cover {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Waveform */
+.sp-cover-wave {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 48px;
+}
+
+.sp-cover-wave span {
+  display: block;
+  width: 3px;
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 2px;
+  animation: sp-wave 0.9s ease-in-out infinite alternate;
+  /* random-ish heights */
+}
+
+.sp-cover-wave span:nth-child(odd)  { height: 10px; }
+.sp-cover-wave span:nth-child(even) { height: 24px; }
+.sp-cover-wave span:nth-child(3n)   { height: 38px; }
+.sp-cover-wave span:nth-child(5n)   { height: 18px; }
+
+@keyframes sp-wave {
+  from { transform: scaleY(0.25); opacity: 0.4; }
+  to   { transform: scaleY(1);    opacity: 1; }
+}
+
+/* Disco + capa empilhados */
+.sp-cover-stack {
+  position: relative;
+  width: 130px;
+  height: 100px;
+  flex-shrink: 0;
+}
+
+.sp-cover-disc {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  animation: sp-spin 4s linear infinite;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  z-index: 0;
+}
+
+.sp-cover-disc.paused { animation-play-state: paused; }
+
+.sp-cover-disc-rings {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle at center,
+    #111 0%, #111 18%,
+    #2a2a2a 19%, #2a2a2a 20%,
+    #1a1a1a 21%, #1a1a1a 32%,
+    #2a2a2a 33%, #2a2a2a 34%,
+    #1a1a1a 35%, #1a1a1a 46%,
+    #2a2a2a 47%, #2a2a2a 48%,
+    #1a1a1a 49%
+  );
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+
+.sp-cover-art {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+  z-index: 1;
+  box-shadow: -4px 0 20px rgba(0,0,0,0.6);
+}
+
+/* Info */
+.sp-cover-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 160px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -274,6 +392,88 @@
 .sp-compact-actions { display: flex; gap: 2px; flex-shrink: 0; }
 
 .sp-controls-compact { gap: 6px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STYLE: iOS
+═══════════════════════════════════════════════════════════════════════════ */
+
+.sp-ios {
+  width: 260px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(30, 30, 35, 0.6);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 12px 48px rgba(0,0,0,0.6);
+}
+
+.sp-ios-art {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+}
+
+.sp-ios-panel {
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sp-ios-info {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sp-ios-text { flex: 1; min-width: 0; }
+
+.sp-ios-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sp-ios-artist {
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sp-ios-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+}
+
+.sp-ios-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.9;
+  transition: opacity 0.15s, transform 0.1s;
+  padding: 6px;
+}
+
+.sp-ios-btn:hover { opacity: 1; }
+.sp-ios-btn:active { transform: scale(0.9); }
+
+.sp-ios-btn svg { width: 28px; height: 28px; }
+
+.sp-ios-play svg { width: 44px; height: 44px; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    QUEUE PANEL
