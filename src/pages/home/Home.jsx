@@ -11,7 +11,7 @@ export default function Home() {
   const [selectedBg, setSelectedBg] = useState('/backgrounds/wallpaper1.gif');
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  const { isConnected, login, logout, currentTrack } = useSpotify();
+  const { isConnected, login, logout, currentTrack, togglePlay, nextTrack, prevTrack } = useSpotify();
 
   // Update clock every second
   useEffect(() => {
@@ -115,7 +115,7 @@ export default function Home() {
         </BrowserWindow>
       )}
 
-      <SpotifyPlayer track={currentTrack} />
+      <SpotifyPlayer track={currentTrack} onTogglePlay={togglePlay} onNext={nextTrack} onPrev={prevTrack} />
       <FloatingDock items={items} />
     </main>
   );

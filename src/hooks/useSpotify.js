@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 
 const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
 const REDIRECT_URI = window.location.origin + '/callback';
-const SCOPES = 'user-read-currently-playing user-read-playback-state';
+const SCOPES = 'user-read-currently-playing user-read-playback-state user-modify-playback-state';
 
 async function generateCodeVerifier() {
   const array = new Uint8Array(32);
@@ -160,6 +160,25 @@ export function useSpotify() {
     return () => clearInterval(interval);
   }, [token, refreshToken]);
 
+  const playerAction = useCallback(async (endpoint, method = 'POST') => {
+    const activeToken = localStorage.getItem('spotify_token');
+    if (!activeToken) return;
+    await fetch(`https://api.spotify.com/v1/me/player/${endpoint}`, {
+      method,
+      headers: { Authorization: `Bearer ${activeToken}` },
+    });
+  }, []);
+
+  const togglePlay = useCallback(() => {
+    const action = currentTrack?.isPlaying ? 'pause' : 'play';
+    playerAction(action, 'PUT');
+    // Atualiza estado local imediatamente para UI responsiva
+    setCurrentTrack((prev) => prev ? { ...prev, isPlaying: !prev.isPlaying } : prev);
+  }, [currentTrack, playerAction]);
+
+  const nextTrack = useCallback(() => playerAction('next'), [playerAction]);
+  const prevTrack = useCallback(() => playerAction('previous'), [playerAction]);
+
   const logout = useCallback(() => {
     localStorage.removeItem('spotify_token');
     localStorage.removeItem('spotify_refresh');
@@ -173,5 +192,8 @@ export function useSpotify() {
     login,
     logout,
     currentTrack,
+    togglePlay,
+    nextTrack,
+    prevTrack,
   };
 }

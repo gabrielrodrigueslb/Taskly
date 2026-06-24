@@ -110,30 +110,34 @@
   margin-top: 2px;
 }
 
-/* Waveform bars (equalizer animation) */
-.waveform {
+/* Playback controls */
+.controls {
   display: flex;
-  align-items: flex-end;
-  gap: 2px;
-  height: 12px;
-  margin-top: 5px;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
 }
 
-.waveform span {
-  display: block;
-  width: 2px;
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 1px;
-  animation: wave 0.8s ease-in-out infinite alternate;
+.ctrl-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: background 0.15s;
 }
 
-.waveform span:nth-child(1) { animation-delay: 0s;    height: 4px; }
-.waveform span:nth-child(2) { animation-delay: 0.1s;  height: 8px; }
-.waveform span:nth-child(3) { animation-delay: 0.2s;  height: 12px; }
-.waveform span:nth-child(4) { animation-delay: 0.15s; height: 6px; }
-.waveform span:nth-child(5) { animation-delay: 0.05s; height: 10px; }
+.ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
 
-@keyframes wave {
-  from { transform: scaleY(0.3); }
-  to   { transform: scaleY(1); }
+.ctrl-play {
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.25);
 }
