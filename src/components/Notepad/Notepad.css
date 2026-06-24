@@ -1,0 +1,184 @@
+/* Pixel font — Stardew Valley style */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+/* ── Root ─────────────────────────────────────────── */
+.notepad-root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  background: #1a1625;
+  border-radius: 0 0 10px 10px;
+  overflow: hidden;
+}
+
+/* ── Toolbar ──────────────────────────────────────── */
+.notepad-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #13111e;
+  border-bottom: 1px solid #2a2540;
+  flex-shrink: 0;
+}
+
+/* Font group */
+.notepad-font-group {
+  display: flex;
+  gap: 4px;
+}
+
+.notepad-font-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 5px 10px;
+  border: 1.5px solid #2a2540;
+  border-radius: 7px;
+  background: transparent;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.15s;
+  min-width: 52px;
+}
+
+.notepad-font-btn:hover { border-color: #7c3aed; color: #a78bfa; }
+
+.notepad-font-btn.active {
+  background: #2d1e5a;
+  border-color: #7c3aed;
+  color: #e2e8f0;
+}
+
+.notepad-font-preview {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Font-specific previews */
+.notepad-font-btn.font-normal .notepad-font-preview {
+  font-family: system-ui, sans-serif;
+}
+
+.notepad-font-btn.font-mono .notepad-font-preview {
+  font-family: 'Courier New', monospace;
+}
+
+.notepad-font-btn.font-pixel .notepad-font-preview {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 7px;
+  line-height: 1;
+}
+
+.notepad-font-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* Divider */
+.notepad-divider {
+  width: 1px;
+  height: 28px;
+  background: #2a2540;
+  flex-shrink: 0;
+}
+
+/* Size group */
+.notepad-size-group {
+  display: flex;
+  gap: 3px;
+}
+
+.notepad-size-btn {
+  width: 26px;
+  height: 26px;
+  border: 1.5px solid #2a2540;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  color: #6b7280;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.notepad-size-btn:hover  { border-color: #7c3aed; color: #a78bfa; }
+.notepad-size-btn.active { background: #2d1e5a; border-color: #7c3aed; color: #e2e8f0; }
+
+/* Save indicator */
+.notepad-save-dot {
+  margin-left: auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  transition: background 0.3s;
+  flex-shrink: 0;
+}
+
+.notepad-save-dot.saved   { background: #22c55e; }
+.notepad-save-dot.unsaved { background: #f59e0b; animation: dot-pulse 0.6s ease-in-out infinite alternate; }
+
+@keyframes dot-pulse {
+  from { opacity: 0.4; }
+  to   { opacity: 1; }
+}
+
+/* ── Textarea ─────────────────────────────────────── */
+.notepad-area {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  border: none;
+  outline: none;
+  resize: none;
+  background: #1a1625;
+  color: #e2e8f0;
+  padding: 16px;
+  box-sizing: border-box;
+  transition: font-family 0.2s, font-size 0.2s;
+}
+
+.notepad-area::placeholder { color: #2d2a45; }
+
+/* Font-specific textarea styles */
+.notepad-area.font-normal {
+  font-family: system-ui, -apple-system, sans-serif;
+  letter-spacing: 0;
+}
+
+.notepad-area.font-mono {
+  font-family: 'Courier New', 'Consolas', monospace;
+  color: #a3e635; /* Classic terminal green */
+  background: #0a0f0a;
+  caret-color: #a3e635;
+}
+
+.notepad-area.font-mono::placeholder { color: #1a2e1a; }
+
+.notepad-area.font-pixel {
+  font-family: 'Press Start 2P', cursive;
+  color: #fef9c3; /* Warm yellow — Stardew Valley vibe */
+  background: #0d1117;
+  caret-color: #fef9c3;
+  letter-spacing: 0.5px;
+}
+
+.notepad-area.font-pixel::placeholder { color: #1e2530; }
+
+/* ── Footer ───────────────────────────────────────── */
+.notepad-footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 14px;
+  background: #13111e;
+  border-top: 1px solid #2a2540;
+  font-size: 10px;
+  color: #374151;
+  flex-shrink: 0;
+}

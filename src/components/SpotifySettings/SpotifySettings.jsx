@@ -1,3 +1,4 @@
+import { IconPlayerPlay, IconPlayerPause, IconMicrophone, IconVinyl, IconPhoto } from '@tabler/icons-react';
 import BrowserWindow from '../BrowserWindow/BrowserWindow';
 import './SpotifySettings.css';
 
@@ -28,7 +29,9 @@ export default function SpotifySettings({ track, style, bgMode, onStyleChange, o
               <p className="sps-nowplaying-title">{track.title}</p>
               <p className="sps-nowplaying-artist">{track.artist}</p>
               <span className={`sps-badge ${track.isPlaying ? 'playing' : 'paused'}`}>
-                {track.isPlaying ? '▶ Tocando' : '⏸ Pausado'}
+                {track.isPlaying
+                  ? <><IconPlayerPlay size={10} /> Tocando</>
+                  : <><IconPlayerPause size={10} /> Pausado</>}
               </span>
             </div>
           </div>
@@ -86,20 +89,20 @@ function BgPreview({ id, track }) {
   if (id === 'artist') {
     return (
       <div className="sps-bg-preview" style={{ backgroundImage: artist ? `url(${artist})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-        {!artist && <span className="sps-bg-preview-icon">🎤</span>}
+        {!artist && <span className="sps-bg-preview-icon"><IconMicrophone size={22} /></span>}
       </div>
     );
   }
   if (id === 'album') {
     return (
       <div className="sps-bg-preview" style={{ backgroundImage: art ? `url(${art})` : undefined, backgroundSize: 'cover', filter: 'blur(2px)', transform: 'scale(1.05)' }}>
-        {!art && <span className="sps-bg-preview-icon">💿</span>}
+        {!art && <span className="sps-bg-preview-icon"><IconVinyl size={22} /></span>}
       </div>
     );
   }
   return (
     <div className="sps-bg-preview sps-bg-preview-none">
-      <span className="sps-bg-preview-icon">🖼️</span>
+      <span className="sps-bg-preview-icon"><IconPhoto size={22} /></span>
     </div>
   );
 }

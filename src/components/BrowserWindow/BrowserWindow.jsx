@@ -5,13 +5,15 @@ export default function BrowserWindow({
   children,
   title = 'My Window',
   onClose,
+  initialWidth = 400,
+  initialHeight = 480,
 }) {
   const windowRef = useRef(null);
   const [position, setPosition] = useState({ x: 100, y: 100 });
   const [dragging, setDragging] = useState(false);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
 
-  const [size, setSize] = useState({ width: 400, height: 300 });
+  const [size, setSize] = useState({ width: initialWidth, height: initialHeight });
   const [resizing, setResizing] = useState(false);
   const resizeStart = useRef({ mouseX: 0, mouseY: 0, width: 0, height: 0 });
 
@@ -69,7 +71,7 @@ export default function BrowserWindow({
   return (
     <div
       ref={windowRef}
-      className="bg-white rounded-md shadow-lg border border-gray-300 absolute select-none"
+      className="bg-white rounded-md shadow-lg border border-gray-300 fixed select-none"
       style={{
         top: position.y,
         left: position.x,
@@ -93,7 +95,7 @@ export default function BrowserWindow({
       </div>
 
       {/* Conteúdo */}
-      <div className=" flex flex-col h-[calc(100%-40px)]">{children}</div>
+      <div className="flex flex-col overflow-y-auto" style={{ height: 'calc(100% - 40px)' }}>{children}</div>
 
       {/* Alça de redimensionamento */}
       <div

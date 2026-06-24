@@ -1,13 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { SkipBack, SkipForward, Pause, Play, ListMusic } from 'lucide-react';
 import './SpotifyPlayer.css';
-
-// ── Icons ─────────────────────────────────────────────────────────────────────
-
-const IconPrev  = () => <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>;
-const IconNext  = () => <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M6 18l8.5-6L6 6v12zm2.5-6 5.5 3.9V8.1L8.5 12zM16 6h2v12h-2z"/></svg>;
-const IconPause = () => <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>;
-const IconPlay  = () => <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M8 5v14l11-7z"/></svg>;
-const IconQueue = () => <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -63,9 +56,49 @@ function ProgressBar({ progressMs, durationMs, onSeek }) {
 
 // ── Queue Panel ───────────────────────────────────────────────────────────────
 
-function QueuePanel({ queue, onSkipToTrack, onClose }) {
+const QUEUE_W = 280;
+const QUEUE_H = 360;
+const MARGIN  = 10;
+
+function QueuePanel({ queue, onSkipToTrack, onClose, playerPos, playerSize }) {
+  // Calcula o melhor posicionamento para não sair da tela nem sobrepor o player
+  const style = (() => {
+    const { x, y } = playerPos;
+    const { w, h } = playerSize;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    const spaceAbove  = y - MARGIN;
+    const spaceBelow  = vh - (y + h) - MARGIN;
+    const spaceRight  = vw - (x + w) - MARGIN;
+    const spaceLeft   = x - MARGIN;
+
+    let top, left;
+
+    // Vertical: preferir acima; se não couber, abaixo; senão encaixar na tela
+    if (spaceAbove >= QUEUE_H) {
+      top = -(QUEUE_H + MARGIN);
+    } else if (spaceBelow >= QUEUE_H) {
+      top = h + MARGIN;
+    } else {
+      // Encaixa verticalmente na tela
+      top = Math.max(-y + MARGIN, -(QUEUE_H + MARGIN));
+    }
+
+    // Horizontal: alinhar à direita do player; se sair, à esquerda; senão encaixar
+    if (x + QUEUE_W <= vw - MARGIN) {
+      left = 0;
+    } else if (spaceLeft >= QUEUE_W) {
+      left = -(QUEUE_W - w);
+    } else {
+      left = Math.max(-x + MARGIN, 0);
+    }
+
+    return { position: 'absolute', top, left, width: QUEUE_W, zIndex: 50 };
+  })();
+
   return (
-    <div className="sp-queue-panel">
+    <div className="sp-queue-panel" style={style}>
       <div className="sp-queue-header">
         <span>Fila</span>
         <button onClick={onClose}>✕</button>
@@ -91,11 +124,11 @@ function QueuePanel({ queue, onSkipToTrack, onClose }) {
 function Controls({ track, onTogglePlay, onNext, onPrev, compact = false }) {
   return (
     <div className="sp-controls">
-      <button className="sp-btn" onClick={onPrev}><IconPrev /></button>
+      <button className="sp-btn" onClick={onPrev}><SkipBack size={16} /></button>
       <button className={`sp-btn sp-btn-play ${compact ? 'sp-btn-green' : ''}`} onClick={onTogglePlay}>
-        {track.isPlaying ? <IconPause /> : <IconPlay />}
+        {track.isPlaying ? <Pause size={18} /> : <Play size={18} />}
       </button>
-      <button className="sp-btn" onClick={onNext}><IconNext /></button>
+      <button className="sp-btn" onClick={onNext}><SkipForward size={16} /></button>
     </div>
   );
 }
@@ -123,7 +156,7 @@ function CoverStyle({ track, progressMs, onTogglePlay, onNext, onPrev, onSeek, o
         <p className="sp-artist">{track.artist}</p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
           <Controls track={track} onTogglePlay={onTogglePlay} onNext={onNext} onPrev={onPrev} />
-          <button className="sp-icon-btn" onClick={onToggleQueue}><IconQueue /></button>
+          <button className="sp-icon-btn" onClick={onToggleQueue}><ListMusic size={15} /></button>
         </div>
         <ProgressBar progressMs={progressMs} durationMs={track.durationMs} onSeek={onSeek} />
         <div className="sp-time-row">
@@ -151,7 +184,7 @@ function VinylStyle({ track, progressMs, onTogglePlay, onNext, onPrev, onSeek, o
         <p className="sp-artist">{track.artist}</p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
           <Controls track={track} onTogglePlay={onTogglePlay} onNext={onNext} onPrev={onPrev} />
-          <button className="sp-icon-btn" onClick={onToggleQueue}><IconQueue /></button>
+          <button className="sp-icon-btn" onClick={onToggleQueue}><ListMusic size={15} /></button>
         </div>
         <ProgressBar progressMs={progressMs} durationMs={track.durationMs} onSeek={onSeek} />
         <div className="sp-time-row">
@@ -170,7 +203,7 @@ function CardStyle({ track, progressMs, onTogglePlay, onNext, onPrev, onSeek, on
     <div className="sp-card">
       <div className="sp-card-top-row">
         <span />
-        <button className="sp-icon-btn" onClick={onToggleQueue}><IconQueue /></button>
+        <button className="sp-icon-btn" onClick={onToggleQueue}><ListMusic size={15} /></button>
       </div>
       <div className="sp-card-body">
         {track.albumArt && <img className="sp-card-art" src={track.albumArt} alt="" />}
@@ -206,7 +239,7 @@ function IosStyle({ track, progressMs, onTogglePlay, onNext, onPrev, onSeek, onT
             <p className="sp-ios-title">{track.title}</p>
             <p className="sp-ios-artist">{track.artist}</p>
           </div>
-          <button className="sp-icon-btn" onClick={onToggleQueue}><IconQueue /></button>
+          <button className="sp-icon-btn" onClick={onToggleQueue}><ListMusic size={15} /></button>
         </div>
 
         <ProgressBar progressMs={progressMs} durationMs={track.durationMs} onSeek={onSeek} />
@@ -216,11 +249,11 @@ function IosStyle({ track, progressMs, onTogglePlay, onNext, onPrev, onSeek, onT
         </div>
 
         <div className="sp-ios-controls">
-          <button className="sp-ios-btn" onClick={onPrev}><IconPrev /></button>
+          <button className="sp-ios-btn" onClick={onPrev}><SkipBack size={26} /></button>
           <button className="sp-ios-btn sp-ios-play" onClick={onTogglePlay}>
-            {track.isPlaying ? <IconPause /> : <IconPlay />}
+            {track.isPlaying ? <Pause size={36} /> : <Play size={36} />}
           </button>
-          <button className="sp-ios-btn" onClick={onNext}><IconNext /></button>
+          <button className="sp-ios-btn" onClick={onNext}><SkipForward size={26} /></button>
         </div>
       </div>
     </div>
@@ -239,7 +272,7 @@ function CompactStyle({ track, progressMs, onTogglePlay, onNext, onPrev, onSeek,
             <p className="sp-title">{track.title}</p>
             <p className="sp-artist">{track.artist}</p>
           </div>
-          <button className="sp-icon-btn" onClick={onToggleQueue}><IconQueue /></button>
+          <button className="sp-icon-btn" onClick={onToggleQueue}><ListMusic size={15} /></button>
         </div>
         <Controls track={track} onTogglePlay={onTogglePlay} onNext={onNext} onPrev={onPrev} compact />
         <ProgressBar progressMs={progressMs} durationMs={track.durationMs} onSeek={onSeek} />
@@ -334,6 +367,8 @@ export default function SpotifyPlayer({ track, queue, style, onTogglePlay, onNex
           queue={queue}
           onSkipToTrack={(uri) => { onSkipToTrack(uri); setShowQueue(false); }}
           onClose={() => setShowQueue(false)}
+          playerPos={pos}
+          playerSize={{ w: wrapRef.current?.offsetWidth || 280, h: wrapRef.current?.offsetHeight || 150 }}
         />
       )}
     </div>

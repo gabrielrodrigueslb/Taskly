@@ -4,12 +4,18 @@ import BrowserWindow from '../../components/BrowserWindow/BrowserWindow';
 import { FloatingDock } from '../../components/menu/Menu';
 import SpotifyPlayer from '../../components/SpotifyPlayer/SpotifyPlayer';
 import SpotifySettings from '../../components/SpotifySettings/SpotifySettings';
+import Pomodoro from '../../components/Pomodoro/Pomodoro';
+import TodoList from '../../components/TodoList/TodoList';
+import Notepad from '../../components/Notepad/Notepad';
 import { useSpotify } from '../../hooks/useSpotify';
-import { IconPhotoEdit, IconClockHour4, IconBrandSpotify } from '@tabler/icons-react';
+import { IconPhotoEdit, IconClockHour4, IconBrandSpotify, IconCheckbox, IconNotes } from '@tabler/icons-react';
 
 export default function Home() {
   const [openBackgrounds, setOpenBackgrounds] = useState(false);
   const [openSpotifySettings, setOpenSpotifySettings] = useState(false);
+  const [openPomodoro, setOpenPomodoro] = useState(false);
+  const [openTodo, setOpenTodo] = useState(false);
+  const [openNotepad, setOpenNotepad] = useState(false);
   const [selectedBg, setSelectedBg] = useState('/backgrounds/wallpaper1.gif');
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -52,11 +58,13 @@ export default function Home() {
 
   const items = [
     { title: 'Backgrounds', icon: <IconPhotoEdit />, onClick: () => setOpenBackgrounds(!openBackgrounds) },
-    { title: 'Pomodoro',    icon: <IconClockHour4 />, href: '' },
+    { title: 'Tarefas',  icon: <IconCheckbox />,  onClick: () => setOpenTodo((v) => !v) },
+    { title: 'Notas',    icon: <IconNotes />,      onClick: () => setOpenNotepad((v) => !v) },
+    { title: 'Pomodoro', icon: <IconClockHour4 />, onClick: () => setOpenPomodoro((v) => !v) },
     {
       title: isConnected ? 'Spotify' : 'Conectar Spotify',
       icon: <IconBrandSpotify />,
-      onClick: isConnected ? () => setOpenSpotifySettings(true) : login,
+      onClick: isConnected ? () => setOpenSpotifySettings((v) => !v) : login,
     },
   ];
 
@@ -85,8 +93,11 @@ export default function Home() {
 
   return (
     <main
-      className="main-background bg-cover bg-center bg-no-repeat overflow-hidden max-h-screen relative transition-all duration-1000"
-      style={{ backgroundImage: `url(${activeBg})` }}
+      className="main-background bg-cover bg-no-repeat overflow-hidden max-h-screen relative transition-all duration-1000"
+      style={{
+        backgroundImage: `url(${activeBg})`,
+        backgroundPosition: bgMode === 'artist' && isPlaying ? 'top center' : 'center',
+      }}
     >
       {/* Overlay quando música estiver tocando */}
       {blurOverlay && (
@@ -116,6 +127,10 @@ export default function Home() {
           </div>
         </BrowserWindow>
       )}
+
+      {openPomodoro && <Pomodoro onClose={() => setOpenPomodoro(false)} />}
+      {openTodo     && <TodoList onClose={() => setOpenTodo(false)} />}
+      {openNotepad  && <Notepad  onClose={() => setOpenNotepad(false)} />}
 
       {openSpotifySettings && (
         <SpotifySettings

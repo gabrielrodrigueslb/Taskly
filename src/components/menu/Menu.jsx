@@ -92,7 +92,6 @@ function DockItem({ item, mouseX, onClick }) {
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         className="relative flex items-center justify-center rounded-full bg-gray-200 dark:bg-neutral-800 cursor-pointer"
-        onClick={item.onClick}
       >
         <AnimatePresence>
           {hovered && (

@@ -1,0 +1,540 @@
+/* ── Pixel font (Notepad) ─────────────────────────── */
+/* (não necessário aqui, mas mantido por coerência de imports) */
+
+/* ────────────────────────────────────────────────────
+   SISTEMA DE TOKENS
+   Superfície quente-noturna, não azul-frio
+   ──────────────────────────────────────────────────── */
+.todo-root {
+  --bg:          #0e0c1a;
+  --bg-raise:    rgba(255,255,255,0.035);
+  --bg-hover:    rgba(255,255,255,0.06);
+  --border:      rgba(255,255,255,0.07);
+  --border-hi:   rgba(255,255,255,0.13);
+  --ink:         #e8e4f8;
+  --ink-2:       #8b86a8;
+  --ink-3:       #3d3858;
+  --accent:      #7c5cbf;
+  --accent-glow: rgba(124,92,191,0.25);
+  --gold:        #c4954a;
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   14px;
+
+  background: var(--bg);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
+  color: var(--ink);
+  font-family: inherit;
+}
+
+/* ── XP / Level ───────────────────────────────────── */
+.todo-xp-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 12px;
+  background: var(--bg-raise);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.todo-xp-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.todo-level-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(124,92,191,0.14);
+  border: 1px solid rgba(124,92,191,0.25);
+  padding: 2px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.todo-xp-text {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.todo-completed-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #5a9e6f;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* XP track — thin, ambient, dourado */
+.todo-xp-track {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.todo-xp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--gold));
+  border-radius: 2px;
+  transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.todo-xp-sub {
+  font-size: 10px;
+  color: var(--ink-3);
+  letter-spacing: 0.2px;
+}
+
+/* ── Level-up toast ───────────────────────────────── */
+.todo-levelup {
+  background: rgba(124,92,191,0.15);
+  border: 1px solid rgba(124,92,191,0.3);
+  color: var(--ink);
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  animation: levelup-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes levelup-pop {
+  from { transform: scale(0.85); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+/* ── Input row ────────────────────────────────────── */
+.todo-input-row {
+  display: flex;
+  gap: 6px;
+}
+
+.todo-input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px;
+  background: var(--bg-raise);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.todo-input::placeholder { color: var(--ink-3); }
+
+.todo-input:focus {
+  border-color: var(--border-hi);
+  background: rgba(255,255,255,0.05);
+}
+
+.todo-add-btn {
+  width: 36px;
+  height: 36px;
+  background: rgba(124,92,191,0.2);
+  border: 1px solid rgba(124,92,191,0.35);
+  color: var(--ink);
+  border-radius: var(--radius-sm);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.todo-add-btn:hover  { background: rgba(124,92,191,0.35); border-color: rgba(124,92,191,0.55); }
+.todo-add-btn:active { transform: scale(0.9); }
+
+/* ── Priority select (custom) ─────────────────────── */
+.pri-select {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.pri-select-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 10px;
+  background: var(--bg-raise);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.pri-select-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-hi);
+}
+
+.pri-btn-label {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pri-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pri-chevron {
+  color: var(--ink-3);
+  transition: transform 0.18s ease;
+  flex-shrink: 0;
+}
+
+.pri-chevron.open { transform: rotate(180deg); }
+
+.pri-dropdown {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  background: #16132a;
+  border: 1px solid var(--border-hi);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  z-index: 500;
+  min-width: 148px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+  animation: drop-in 0.14s cubic-bezier(0.2, 0, 0, 1);
+}
+
+@keyframes drop-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.pri-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.pri-option:hover    { background: var(--bg-hover); }
+.pri-option.selected { background: rgba(255,255,255,0.06); }
+
+.pri-option-label {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  text-align: left;
+}
+
+.pri-option-xp {
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+/* ── Controls row ─────────────────────────────────── */
+.todo-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.todo-filters {
+  display: flex;
+  background: var(--bg-raise);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  gap: 2px;
+  flex: 1;
+}
+
+.todo-filter {
+  flex: 1;
+  padding: 5px 6px;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--ink-2);
+  transition: background 0.13s, color 0.13s;
+}
+
+.todo-filter:hover:not(.active) { color: var(--ink); background: rgba(255,255,255,0.04); }
+
+.todo-filter.active {
+  background: rgba(124,92,191,0.25);
+  color: var(--ink);
+}
+
+.todo-sort-select {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--bg-raise);
+  color: var(--ink-2);
+  cursor: pointer;
+  outline: none;
+  flex-shrink: 0;
+  transition: border-color 0.13s;
+}
+
+.todo-sort-select:hover { border-color: var(--border-hi); }
+
+/* ── Task list ────────────────────────────────────── */
+.todo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.todo-list::-webkit-scrollbar { width: 3px; }
+.todo-list::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+.todo-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--ink-3);
+  font-size: 12px;
+  padding: 32px 0;
+}
+
+/* ── Task item ────────────────────────────────────── */
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 11px 9px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-raise);
+  border: 1px solid var(--border);
+
+  border-left: 2px solid var(--pc, var(--accent));
+  position: relative;
+  cursor: default;
+  overflow: hidden;
+  transition: background 0.13s, border-color 0.13s;
+  animation: item-in 0.22s ease-out both;
+}
+
+/* Signature: glow lateral emanando da cor de prioridade */
+.todo-item::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 60px;
+  background: linear-gradient(to right, var(--pc, var(--accent)), transparent);
+  opacity: 0.07;
+  pointer-events: none;
+}
+
+@keyframes item-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.todo-item:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-hi);
+}
+
+.todo-item.done { opacity: 0.38; }
+
+.todo-item.dragging { opacity: 0.25; transform: scale(0.98); }
+
+.todo-item.drag-over {
+  border-top-color: var(--accent);
+  background: var(--bg-hover);
+}
+
+/* ── Drag handle ─────────────────────────────────── */
+.todo-handle {
+  color: var(--ink-3);
+  cursor: grab;
+  font-size: 16px;
+  user-select: none;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.13s;
+}
+
+.todo-item:hover .todo-handle { opacity: 1; }
+.todo-handle:active { cursor: grabbing; }
+
+/* ── Priority dot ────────────────────────────────── */
+.todo-pri-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+/* ── Checkbox ────────────────────────────────────── */
+.todo-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-hi);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.todo-check:hover:not(.checked) {
+  border-color: var(--pc, var(--accent));
+}
+
+.todo-check.checked {
+  background: var(--pc, var(--accent));
+  border-color: var(--pc, var(--accent));
+  animation: check-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes check-pop {
+  0%   { transform: scale(0.6); }
+  60%  { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.todo-check-mark {
+  color: white;
+  animation: mark-in 0.18s ease-out;
+  display: flex;
+}
+
+@keyframes mark-in {
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+/* ── Task text ────────────────────────────────────── */
+.todo-text {
+  flex: 1;
+  font-size: 13px;
+  color: var(--ink);
+  word-break: break-word;
+  line-height: 1.45;
+}
+
+.todo-item.done .todo-text {
+  text-decoration: line-through;
+  color: var(--ink-3);
+}
+
+/* ── XP badge ────────────────────────────────────── */
+.todo-xp-badge {
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0;
+  flex-shrink: 0;
+  letter-spacing: 0.2px;
+  transition: opacity 0.13s;
+}
+
+.todo-item:hover .todo-xp-badge { opacity: 0.6; }
+.todo-item.done .todo-xp-badge  { opacity: 0; }
+
+/* ── Delete ──────────────────────────────────────── */
+.todo-del {
+  background: none;
+  border: none;
+  color: var(--ink-3);
+  cursor: pointer;
+  font-size: 10px;
+  padding: 3px 5px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.13s, color 0.13s, background 0.13s;
+}
+
+.todo-item:hover .todo-del { opacity: 1; }
+.todo-del:hover { color: #e05252; background: rgba(224,82,82,0.1); }
+
+/* ── Footer ──────────────────────────────────────── */
+.todo-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: var(--ink-3);
+  letter-spacing: 0.2px;
+}
+
+.todo-clear {
+  background: none;
+  border: none;
+  font-size: 10px;
+  color: #7a3838;
+  cursor: pointer;
+  letter-spacing: 0.2px;
+  transition: color 0.13s;
+}
+
+.todo-clear:hover { color: #e05252; }
+
+/* ── Confetti ────────────────────────────────────── */
+.confetti-burst {
+  position: absolute;
+  left: 30px;
+  top: 50%;
+  pointer-events: none;
+  z-index: 200;
+}
+
+.confetti-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color, #a855f7);
+  animation: confetti-fly 0.85s ease-out var(--delay, 0ms) both;
+}
+
+@keyframes confetti-fly {
+  0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--dx, 40px), var(--dy, -40px)) scale(0.1); opacity: 0; }
+}

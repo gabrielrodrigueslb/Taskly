@@ -236,17 +236,18 @@
 
 .sp-vinyl {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 14px;
 }
 
 /* Disc */
 .sp-vinyl-disc {
-  width: 90px; height: 90px;
+  width: 96px; height: 96px;
   border-radius: 50%;
   flex-shrink: 0;
   animation: sp-spin 4s linear infinite;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.7);
+  margin-top: 2px;
 }
 
 .sp-vinyl-disc.paused { animation-play-state: paused; }
@@ -260,28 +261,28 @@
   width: 100%; height: 100%;
   border-radius: 50%;
   background: radial-gradient(circle at center,
-    #111 0%, #111 18%,
-    #2a2a2a 19%, #2a2a2a 20%,
-    #1a1a1a 21%, #1a1a1a 32%,
-    #2a2a2a 33%, #2a2a2a 34%,
-    #1a1a1a 35%, #1a1a1a 46%,
-    #2a2a2a 47%, #2a2a2a 48%,
-    #1a1a1a 49%, #1a1a1a 60%,
-    #2a2a2a 61%, #2a2a2a 62%,
-    #1a1a1a 63%
+    #0a0a0a 0%,  #0a0a0a 19%,
+    #2c2c2c 20%, #2c2c2c 21%,
+    #161616 22%, #161616 33%,
+    #2c2c2c 34%, #2c2c2c 35%,
+    #161616 36%, #161616 47%,
+    #2c2c2c 48%, #2c2c2c 49%,
+    #161616 50%, #161616 61%,
+    #2c2c2c 62%, #2c2c2c 63%,
+    #161616 64%
   );
   display: flex; align-items: center; justify-content: center;
   position: relative;
 }
 
 .sp-vinyl-art {
-  width: 32px; height: 32px;
+  width: 34px; height: 34px;
   border-radius: 50%;
   overflow: hidden;
   position: absolute;
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
-  border: 1.5px solid rgba(255,255,255,0.1);
+  border: 2px solid rgba(255,255,255,0.08);
 }
 
 .sp-vinyl-art img { width: 100%; height: 100%; object-fit: cover; }
@@ -289,7 +290,7 @@
 .sp-vinyl-hole {
   width: 6px; height: 6px;
   border-radius: 50%;
-  background: #111;
+  background: #0a0a0a;
   position: absolute;
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
@@ -301,6 +302,7 @@
   flex-direction: column;
   gap: 4px;
   width: 170px;
+  padding-top: 4px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -480,10 +482,6 @@
 ═══════════════════════════════════════════════════════════════════════════ */
 
 .sp-queue-panel {
-  position: absolute;
-  bottom: calc(100% + 10px);
-  right: 0;
-  width: 280px;
   max-height: 360px;
   background: rgba(15, 15, 20, 0.92);
   backdrop-filter: blur(20px);

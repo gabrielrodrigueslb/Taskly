@@ -1,0 +1,124 @@
+.pom-root {
+  background: white;
+  border-radius: 0 0 12px 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.pom-tabs {
+  display: flex;
+  gap: 6px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 4px;
+  width: 100%;
+}
+
+.pom-tab {
+  flex: 1;
+  padding: 6px 0;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.pom-tab:hover:not(.active) { background: #e5e7eb; }
+
+/* Ring */
+.pom-ring-wrap {
+  position: relative;
+  width: 200px;
+  height: 200px;
+}
+
+.pom-time {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.pom-digits {
+  font-size: 42px;
+  font-weight: 700;
+  color: #111;
+  letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pom-mode-label {
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+/* Controls */
+.pom-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pom-btn {
+  border: none;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s, opacity 0.15s;
+  font-size: 16px;
+}
+
+.pom-btn:active { transform: scale(0.92); }
+
+.pom-reset, .pom-next {
+  width: 36px; height: 36px;
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.pom-reset:hover, .pom-next:hover { background: #e5e7eb; }
+
+.pom-play {
+  width: 56px; height: 56px;
+  color: white;
+  font-size: 22px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+/* Cycles */
+.pom-cycles {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pom-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  transition: background 0.3s;
+}
+
+.pom-dot.done { background: #22c55e; }
+
+.pom-cycle-label {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-left: 4px;
+}
